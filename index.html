@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>考試計時器</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Helvetica Neue',Arial,'Microsoft JhengHei','微軟正黑體',sans-serif;background:#f9f9f9;min-height:100vh;padding:1rem}
+    .wrap{max-width:680px;margin:0 auto;padding:1rem}
+    .card{background:#fff;border:1.5px solid rgb(139,0,0);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+    .title-bar{background:rgb(139,0,0);color:#fff;text-align:center;padding:.75rem 1rem;border-radius:8px;font-size:20px;font-weight:500;letter-spacing:2px;margin-bottom:1.5rem}
+    .form-row{margin-bottom:1rem}
+    label{display:block;font-size:14px;color:rgb(100,0,0);margin-bottom:4px;font-weight:500}
+    select,input[type=number]{padding:8px 10px;border:1px solid rgb(180,80,80);border-radius:6px;font-size:15px;background:#fff;color:#222;outline:none}
+    select{width:100%}
+    select:focus,input:focus{border-color:rgb(139,0,0);box-shadow:0 0 0 2px rgba(139,0,0,.15)}
+    .checkbox-row{display:flex;align-items:center;gap:10px;margin-top:4px}
+    .checkbox-row input[type=checkbox]{width:20px;height:20px;accent-color:rgb(139,0,0);cursor:pointer;flex-shrink:0}
+    .checkbox-row span{font-size:15px;color:#333;cursor:pointer}
+    .extra-note{font-size:12px;margin-top:6px;min-height:16px}
+    .extra-note.warn{color:rgb(180,60,0)}
+    .extra-note.info{color:#999}
+    .confirm-btn{width:100%;padding:12px;background:rgb(139,0,0);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer;letter-spacing:1px;margin-top:.5rem}
+    .confirm-btn:hover{background:rgb(110,0,0)}
+    .divider{text-align:center;color:rgb(139,0,0);font-size:13px;margin:1rem 0;position:relative}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:rgba(139,0,0,.3)}
+    .divider::before{left:0}.divider::after{right:0}
+    .time-input-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .time-input-row input[type=number]{width:72px;text-align:center}
+    .time-input-row .sep{font-size:20px;font-weight:600;color:rgb(139,0,0);line-height:1}
+    .time-input-row .unit{font-size:13px;color:#888}
+    .page2{display:none}
+    .date-zh{font-size:22px;font-weight:500;color:rgb(139,0,0);text-align:center;margin-bottom:4px}
+    .date-en{font-size:15px;color:#888;text-align:center;margin-bottom:1.5rem}
+    .subject-label{font-size:18px;font-weight:500;color:rgb(139,0,0);text-align:center;margin-bottom:1.5rem;letter-spacing:1px}
+    .timers-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
+    .timer-block{text-align:center;flex:1;min-width:120px}
+    .timer-type{font-size:12px;color:#999;margin-bottom:4px}
+    .timer-display{font-size:52px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:2px;line-height:1;transition:color .3s}
+    .timer-display.pending{color:#ccc}
+    .timer-display.extra-active{color:rgb(180,60,60)}
+    .timer-display.main-active{color:rgb(139,0,0)}
+    .timer-display.done{color:#ccc}
+    .ctrl-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+    .ctrl-btn{padding:10px 28px;border-radius:8px;border:1.5px solid rgb(139,0,0);font-size:15px;cursor:pointer;font-weight:500;transition:all .15s}
+    .ctrl-btn.primary{background:rgb(139,0,0);color:#fff}
+    .ctrl-btn.primary:hover{background:rgb(110,0,0)}
+    .ctrl-btn.secondary{background:#fff;color:rgb(139,0,0)}
+    .ctrl-btn.secondary:hover{background:rgba(139,0,0,.08)}
+    .pause-log{background:#fff8f8;border:1px solid rgba(139,0,0,.2);border-radius:8px;padding:12px;margin-bottom:1rem;max-height:160px;overflow-y:auto}
+    .pause-log-title{font-size:12px;color:rgb(139,0,0);font-weight:500;margin-bottom:8px}
+    .pause-entry{font-size:13px;color:#555;padding:4px 0;border-bottom:1px solid rgba(139,0,0,.08);display:flex;gap:5px;align-items:baseline;flex-wrap:wrap}
+    .pause-entry:last-child{border:none}
+    .pe-time{color:rgb(139,0,0);font-weight:500}
+    .pe-label{color:#999}
+    .pe-dur{color:rgb(139,0,0);font-weight:600}
+    .alert-banner{background:rgb(139,0,0);color:#fff;text-align:center;padding:8px;border-radius:6px;font-size:14px;font-weight:500;margin-bottom:1rem;display:none}
+    .end-btn{width:100%;padding:14px;background:#fff;color:rgb(139,0,0);border:2px solid rgb(139,0,0);border-radius:8px;font-size:17px;font-weight:500;cursor:pointer;letter-spacing:1px;display:none}
+    .end-btn:hover{background:rgb(139,0,0);color:#fff}
+    .back-btn{background:none;border:none;color:rgb(139,0,0);font-size:14px;cursor:pointer;margin-bottom:1rem;display:flex;align-items:center;gap:4px}
+    .status-bar{text-align:center;font-size:13px;color:#999;margin-bottom:.5rem}
+    @media(max-width:480px){
+      .timer-display{font-size:38px}
+      .ctrl-btn{padding:9px 18px;font-size:14px}
+      .title-bar{font-size:16px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 第一頁：設定 -->
+  <div id="page1">
+    <div class="title-bar">📋 考試計時器</div>
+    <div class="card">
+      <div class="form-row">
+        <label>年級</label>
+        <select id="grade" onchange="onGradeChange()">
+          <option value="">-- 選擇年級 --</option>
+          <option value="P1">P.1</option>
+          <option value="P2">P.2</option>
+          <option value="P3">P.3</option>
+          <option value="P4">P.4</option>
+          <option value="P5">P.5</option>
+          <option value="P6">P.6</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>考核科目</label>
+        <select id="subject" onchange="onSubjectChange()">
+          <option value="">-- 先選年級 --</option>
+        </select>
+      </div>
+      <div class="form-row" id="extraRow">
+        <label>加時</label>
+        <div class="checkbox-row">
+          <input type="checkbox" id="chkExtra" onchange="updateExtraNote()">
+          <span onclick="document.getElementById('chkExtra').click()">加時</span>
+        </div>
+        <div class="extra-note" id="extraNote"></div>
+      </div>
+      <button class="confirm-btn" onclick="startExam()">確 認 開 始</button>
+    </div>
+
+    <div class="divider">或</div>
+
+    <div class="card">
+      <div class="form-row">
+        <label>手動輸入倒數時間</label>
+        <div class="time-input-row">
+          <input type="number" id="manualMins" min="0" max="300" placeholder="00">
+          <span class="unit">分</span>
+          <span class="sep">:</span>
+          <input type="number" id="manualSecs" min="0" max="59" placeholder="00">
+          <span class="unit">秒</span>
+        </div>
+      </div>
+      <button class="confirm-btn" onclick="startManual()">確認手動計時</button>
+    </div>
+  </div>
+
+  <!-- 第二頁：計時 -->
+  <div class="page2" id="page2">
+    <button class="back-btn" onclick="goBack()">← 返回設定</button>
+    <div class="card">
+      <div id="dateZh" class="date-zh"></div>
+      <div id="dateEn" class="date-en"></div>
+      <div id="subjectLabel" class="subject-label"></div>
+      <div id="alertBanner" class="alert-banner"></div>
+      <div class="timers-row" id="timersRow"></div>
+      <div class="status-bar" id="statusBar">尚未開始</div>
+      <div class="ctrl-row">
+        <button class="ctrl-btn primary" id="btnStart" onclick="controlTimer()">開始計時</button>
+      </div>
+      <div id="pauseLogWrap" style="display:none">
+        <div class="pause-log">
+          <div class="pause-log-title">暫停記錄</div>
+          <div id="pauseLog"></div>
+        </div>
+      </div>
+      <button class="end-btn" id="btnEnd" onclick="endExam()">結束考試</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SUBJECTS = {
+    "中文":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:60,P2:60,P3:60,P4:60,P5:60,P6:60}, extra:10},
+    "英文":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:55,P2:55,P3:55,P4:55,P5:55,P6:55}, extra:10},
+    "數學":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:45,P2:45,P3:45,P4:55,P5:55,P6:55}, extra:10},
+    "中文寫作": {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:50,P2:50,P3:40,P4:55,P5:55,P6:55}, extra:10},
+    "英文聆聽": {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:30,P2:30,P3:30,P4:30,P5:30,P6:30}, extra:0},
+    "中文聆聽": {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:30,P2:30,P3:30,P4:30,P5:30,P6:30}, extra:0},
+    "宗教":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:25,P2:25,P3:25,P4:25,P5:25,P6:25}, extra:0},
+    "普通話":   {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:30,P2:30,P3:30,P4:30,P5:30,P6:30}, extra:0},
+    "常識":     {grades:['P2','P3','P5','P6'],           mins:{P2:45,P3:45,P5:45,P6:45}, extra:10},
+    "人文":     {grades:['P1','P4'],                     mins:{P1:45,P4:45}, extra:10},
+    "科學":     {grades:['P4'],                          mins:{P4:35}, extra:8},
+    "樂理":     {grades:['P5','P6'],                     mins:{P5:30,P6:30}, extra:0}
+  };
+
+  const NO_EXTRA_GRADES = ['P1'];
+  let timerState = {};
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function beep(times) {
+    const ctx = getAudioCtx();
+    let t = ctx.currentTime;
+    for (let i = 0; i < times; i++) {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.5, t + i * 0.45);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.45 + 0.35);
+      osc.start(t + i * 0.45); osc.stop(t + i * 0.45 + 0.35);
+    }
+  }
+
+  function isExtraAllowed(grade, subject) {
+    if (NO_EXTRA_GRADES.includes(grade)) return false;
+    if (!subject || !SUBJECTS[subject]) return false;
+    return SUBJECTS[subject].extra > 0;
+  }
+
+  function onGradeChange() {
+    const g = document.getElementById('grade').value;
+    const sel = document.getElementById('subject');
+    sel.innerHTML = '<option value="">-- 選擇科目 --</option>';
+    if (!g) return;
+    Object.keys(SUBJECTS).forEach(s => {
+      if (SUBJECTS[s].grades.includes(g)) {
+        const o = document.createElement('option');
+        o.value = s; o.textContent = s; sel.appendChild(o);
+      }
+    });
+    document.getElementById('chkExtra').checked = false;
+    updateExtraNote();
+    updateExtraRowVisibility();
+  }
+
+  function onSubjectChange() {
+    updateExtraNote();
+    updateExtraRowVisibility();
+  }
+
+  function updateExtraRowVisibility() {
+    const g = document.getElementById('grade').value;
+    const row = document.getElementById('extraRow');
+    const chk = document.getElementById('chkExtra');
+    if (NO_EXTRA_GRADES.includes(g)) {
+      row.style.display = 'none'; chk.checked = false;
+    } else {
+      row.style.display = '';
+    }
+  }
+
+  function updateExtraNote() {
+    const g = document.getElementById('grade').value;
+    const s = document.getElementById('subject').value;
+    const chk = document.getElementById('chkExtra').checked;
+    const note = document.getElementById('extraNote');
+    if (NO_EXTRA_GRADES.includes(g)) { note.textContent = ''; return; }
+    if (chk && g && s && SUBJECTS[s]) {
+      const ex = SUBJECTS[s].extra;
+      if (ex > 0) { note.className = 'extra-note info'; note.textContent = `加時：+${ex} 分鐘`; }
+      else { note.className = 'extra-note warn'; note.textContent = '此科目不設加時'; }
+    } else { note.textContent = ''; }
+  }
+
+  function getOrdinal(n) {
+    const s = ['th','st','nd','rd'], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  function getHKDate() {
+    const hk = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Hong_Kong'}));
+    const en = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const d = hk.getDate(), m = hk.getMonth(), y = hk.getFullYear();
+    return { zh: `${m+1}月${d}日`, en: `${getOrdinal(d)} ${en[m]}, ${y}` };
+  }
+
+  function getHKTimeStr() {
+    return new Date().toLocaleTimeString('zh-HK', {
+      timeZone: 'Asia/Hong_Kong', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+  }
+
+  function fmt(secs) {
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function startExam() {
+    const g = document.getElementById('grade').value;
+    const s = document.getElementById('subject').value;
+    if (!g || !s) { alert('請選擇年級和科目'); return; }
+    const mins = SUBJECTS[s].mins[g];
+    if (!mins) { alert('此年級沒有此科目'); return; }
+    const chk = document.getElementById('chkExtra').checked;
+    const allowed = isExtraAllowed(g, s);
+    const ex = (chk && allowed) ? SUBJECTS[s].extra : 0;
+    initTimer(s, mins * 60, ex * 60);
+  }
+
+  function startManual() {
+    const m = parseInt(document.getElementById('manualMins').value) || 0;
+    const s = parseInt(document.getElementById('manualSecs').value) || 0;
+    const total = m * 60 + s;
+    if (total < 1) { alert('請輸入有效時間'); return; }
+    initTimer('手動計時', total, 0);
+  }
+
+  function initTimer(subject, mainSecs, extraSecs) {
+    if (timerState.interval) clearInterval(timerState.interval);
+    if (timerState.endInterval) clearInterval(timerState.endInterval);
+    timerState = {
+      mainSecs, extraSecs, mainRemain: mainSecs, extraRemain: extraSecs,
+      hasExtra: extraSecs > 0,
+      phase: 'main', running: false, interval: null,
+      pauseStart: null, alerted15: false, alerted5: false,
+      endInterval: null
+    };
+    const d = getHKDate();
+    document.getElementById('dateZh').textContent = d.zh;
+    document.getElementById('dateEn').textContent = d.en;
+    document.getElementById('subjectLabel').textContent = subject;
+    renderTimers();
+    document.getElementById('statusBar').textContent = '尚未開始';
+    const btn = document.getElementById('btnStart');
+    btn.textContent = '開始計時'; btn.className = 'ctrl-btn primary'; btn.style.display = '';
+    document.getElementById('alertBanner').style.display = 'none';
+    document.getElementById('pauseLogWrap').style.display = 'none';
+    document.getElementById('pauseLog').innerHTML = '';
+    document.getElementById('btnEnd').style.display = 'none';
+    document.getElementById('page1').style.display = 'none';
+    document.getElementById('page2').style.display = 'block';
+  }
+
+  function renderTimers() {
+    const row = document.getElementById('timersRow');
+    if (timerState.extraSecs > 0) {
+      row.innerHTML = `
+        <div class="timer-block">
+          <div class="timer-type">一般考試時間</div>
+          <div class="timer-display main-active" id="dispMain">${fmt(timerState.mainRemain)}</div>
+        </div>
+        <div class="timer-block">
+          <div class="timer-type">額外加時</div>
+          <div class="timer-display pending" id="dispExtra">${fmt(timerState.extraRemain)}</div>
+        </div>`;
+    } else {
+      row.innerHTML = `
+        <div class="timer-block">
+          <div class="timer-type">考試時間</div>
+          <div class="timer-display main-active" id="dispMain">${fmt(timerState.mainRemain)}</div>
+        </div>`;
+    }
+  }
+
+  function updateDisplay() {
+    const dm = document.getElementById('dispMain');
+    const de = document.getElementById('dispExtra');
+    if (dm) dm.textContent = fmt(timerState.mainRemain);
+    if (de) de.textContent = fmt(timerState.extraRemain);
+    if (timerState.phase === 'main') {
+      if (dm) dm.className = 'timer-display main-active';
+      if (de) de.className = 'timer-display pending';
+    } else {
+      if (dm) dm.className = 'timer-display done';
+      if (de) de.className = 'timer-display extra-active';
+    }
+  }
+
+  function checkAlerts() {
+    const ts = timerState;
+    if (ts.phase === 'main') {
+      if (ts.mainRemain === 900 && !ts.alerted15) { ts.alerted15 = true; showAlert('⚠️ 距離考試結束還有 15 分鐘'); beep(2); }
+      if (ts.mainRemain === 300 && !ts.alerted5)  { ts.alerted5  = true; showAlert('⚠️ 距離考試結束還有 5 分鐘');  beep(2); }
+    }
+    // 加時期間不設 15/5 分鐘提示
+  }
+
+  function showAlert(msg) {
+    const b = document.getElementById('alertBanner');
+    b.textContent = msg; b.style.display = 'block';
+    setTimeout(() => { if (b.textContent === msg) b.style.display = 'none'; }, 6000);
+  }
+
+  function tick() {
+    const ts = timerState;
+    if (ts.phase === 'main') {
+      ts.mainRemain--;
+      if (ts.mainRemain <= 0) {
+        ts.mainRemain = 0; updateDisplay();
+        if (ts.extraSecs > 0) {
+          ts.phase = 'extra';
+          beep(2); // 進入加時立即響兩下
+          showAlert('一般考試時間完結，開始計算加時');
+        } else {
+          finishAll(); return;
+        }
+      } else {
+        updateDisplay(); checkAlerts();
+      }
+    } else {
+      ts.extraRemain--;
+      if (ts.extraRemain <= 0) {
+        ts.extraRemain = 0; updateDisplay(); finishAll(); return;
+      } else {
+        updateDisplay();
+      }
+    }
+  }
+
+  function finishAll() {
+    const ts = timerState;
+    if (ts.interval) clearInterval(ts.interval);
+    ts.running = false; ts.phase = 'done';
+    document.getElementById('btnStart').style.display = 'none';
+    document.getElementById('btnEnd').style.display = 'block';
+    showAlert('🎉 所有考試時間完結！');
+    document.getElementById('statusBar').textContent = '考試時間完結';
+    ts.endInterval = setInterval(() => beep(3), 1800);
+  }
+
+  function endExam() {
+    if (timerState.endInterval) clearInterval(timerState.endInterval);
+    document.getElementById('btnEnd').style.display = 'none';
+    document.getElementById('alertBanner').style.display = 'none';
+    document.getElementById('statusBar').textContent = '考試已結束';
+  }
+
+  function controlTimer() {
+    const ts = timerState;
+    if (ts.phase === 'done') return;
+    const btn = document.getElementById('btnStart');
+    if (!ts.running) {
+      ts.running = true;
+      ts.interval = setInterval(tick, 1000);
+      if (ts.pauseStart !== null) {
+        const resumeTime = getHKTimeStr();
+        const durSecs = Math.round((Date.now() - ts.pauseStart) / 1000);
+        const log = document.getElementById('pauseLog');
+        const entries = log.querySelectorAll('.pause-entry');
+        if (entries.length > 0) {
+          const last = entries[entries.length - 1];
+          last.innerHTML += `<span class="pe-label">｜繼續</span><span class="pe-time">${resumeTime}</span><span class="pe-label">｜停頓</span><span class="pe-dur">${fmt(durSecs)}</span>`;
+        }
+        ts.pauseStart = null;
+      }
+      btn.textContent = '暫停'; btn.className = 'ctrl-btn secondary';
+      document.getElementById('statusBar').textContent = '計時中…';
+    } else {
+      ts.running = false;
+      if (ts.interval) clearInterval(ts.interval);
+      ts.pauseStart = Date.now();
+      const pauseTime = getHKTimeStr();
+      const log = document.getElementById('pauseLog');
+      const el = document.createElement('div'); el.className = 'pause-entry';
+      el.innerHTML = `<span class="pe-label">暫停</span><span class="pe-time">${pauseTime}</span>`;
+      log.appendChild(el);
+      log.parentElement.scrollTop = log.parentElement.scrollHeight;
+      document.getElementById('pauseLogWrap').style.display = 'block';
+      btn.textContent = '繼續'; btn.className = 'ctrl-btn primary';
+      document.getElementById('statusBar').textContent = '已暫停';
+    }
+  }
+
+  function goBack() {
+    if (timerState.interval) clearInterval(timerState.interval);
+    if (timerState.endInterval) clearInterval(timerState.endInterval);
+    document.getElementById('page2').style.display = 'none';
+    document.getElementById('page1').style.display = 'block';
+  }
+</script>
+</body>
+</html>
