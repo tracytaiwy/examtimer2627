@@ -6,65 +6,88 @@
   <title>考試計時器</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Helvetica Neue',Arial,'Microsoft JhengHei','微軟正黑體',sans-serif;background:#f9f9f9;min-height:100vh;padding:1rem}
-    .wrap{max-width:680px;margin:0 auto;padding:1rem}
-    .card{background:#fff;border:1.5px solid rgb(139,0,0);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
-    .title-bar{background:rgb(139,0,0);color:#fff;text-align:center;padding:.75rem 1rem;border-radius:8px;font-size:20px;font-weight:500;letter-spacing:2px;margin-bottom:1.5rem}
+    html{font-size:clamp(14px,2vw,18px)}
+    body{font-family:'Helvetica Neue',Arial,'Microsoft JhengHei','微軟正黑體',sans-serif;background:#f9f9f9;min-height:100vh;padding:clamp(.5rem,2vw,1.5rem)}
+    .wrap{max-width:min(680px,98vw);margin:0 auto;padding:clamp(.5rem,2vw,1rem)}
+    .card{background:#fff;border:1.5px solid rgb(139,0,0);border-radius:clamp(8px,2vw,12px);padding:clamp(1rem,3vw,1.5rem);margin-bottom:1rem}
+    .title-bar{background:rgb(139,0,0);color:#fff;text-align:center;padding:clamp(.5rem,2vw,.75rem) 1rem;border-radius:clamp(6px,1.5vw,8px);font-size:clamp(16px,3.5vw,22px);font-weight:500;letter-spacing:2px;margin-bottom:1.5rem}
     .form-row{margin-bottom:1rem}
-    label{display:block;font-size:14px;color:rgb(100,0,0);margin-bottom:4px;font-weight:500}
-    select,input[type=number]{padding:8px 10px;border:1px solid rgb(180,80,80);border-radius:6px;font-size:15px;background:#fff;color:#222;outline:none}
+    label{display:block;font-size:clamp(12px,1.8vw,15px);color:rgb(100,0,0);margin-bottom:4px;font-weight:500}
+    select,input[type=number]{padding:clamp(6px,1.5vw,9px) clamp(8px,2vw,11px);border:1px solid rgb(180,80,80);border-radius:6px;font-size:clamp(13px,2vw,16px);background:#fff;color:#222;outline:none}
     select{width:100%}
     select:focus,input:focus{border-color:rgb(139,0,0);box-shadow:0 0 0 2px rgba(139,0,0,.15)}
     .checkbox-row{display:flex;align-items:center;gap:10px;margin-top:4px}
-    .checkbox-row input[type=checkbox]{width:20px;height:20px;accent-color:rgb(139,0,0);cursor:pointer;flex-shrink:0}
-    .checkbox-row span{font-size:15px;color:#333;cursor:pointer}
-    .extra-note{font-size:12px;margin-top:6px;min-height:16px}
+    .checkbox-row input[type=checkbox]{width:clamp(16px,2.5vw,20px);height:clamp(16px,2.5vw,20px);accent-color:rgb(139,0,0);cursor:pointer;flex-shrink:0}
+    .checkbox-row span{font-size:clamp(13px,2vw,16px);color:#333;cursor:pointer}
+    .extra-note{font-size:clamp(11px,1.5vw,13px);margin-top:6px;min-height:16px}
     .extra-note.warn{color:rgb(180,60,0)}
     .extra-note.info{color:#999}
-    .confirm-btn{width:100%;padding:12px;background:rgb(139,0,0);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer;letter-spacing:1px;margin-top:.5rem}
+    .confirm-btn{width:100%;padding:clamp(10px,2.5vw,13px);background:rgb(139,0,0);color:#fff;border:none;border-radius:8px;font-size:clamp(14px,2.5vw,17px);font-weight:500;cursor:pointer;letter-spacing:1px;margin-top:.5rem}
     .confirm-btn:hover{background:rgb(110,0,0)}
-    .divider{text-align:center;color:rgb(139,0,0);font-size:13px;margin:1rem 0;position:relative}
+    .divider{text-align:center;color:rgb(139,0,0);font-size:clamp(12px,1.8vw,14px);margin:1rem 0;position:relative}
     .divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:rgba(139,0,0,.3)}
     .divider::before{left:0}.divider::after{right:0}
-    .time-input-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .time-input-row input[type=number]{width:72px;text-align:center}
-    .time-input-row .sep{font-size:20px;font-weight:600;color:rgb(139,0,0);line-height:1}
-    .time-input-row .unit{font-size:13px;color:#888}
+    .time-input-row{display:flex;align-items:center;gap:clamp(6px,1.5vw,10px);flex-wrap:wrap}
+    .time-input-row input[type=number]{width:clamp(56px,12vw,76px);text-align:center}
+    .time-input-row .sep{font-size:clamp(16px,3vw,22px);font-weight:600;color:rgb(139,0,0);line-height:1}
+    .time-input-row .unit{font-size:clamp(12px,1.8vw,14px);color:#888}
+
     .page2{display:none}
-    .date-zh{font-size:22px;font-weight:500;color:rgb(139,0,0);text-align:center;margin-bottom:4px}
-    .date-en{font-size:15px;color:#888;text-align:center;margin-bottom:1.5rem}
-    .subject-label{font-size:18px;font-weight:500;color:rgb(139,0,0);text-align:center;margin-bottom:1.5rem;letter-spacing:1px}
-    .timers-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
-    .timer-block{text-align:center;flex:1;min-width:120px}
-    .timer-type{font-size:12px;color:#999;margin-bottom:4px}
-    .timer-display{font-size:52px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:2px;line-height:1;transition:color .3s}
+    .date-zh{
+      font-size:clamp(30px,7vw,52px);
+      font-weight:700;
+      color:rgb(139,0,0);
+      text-align:center;
+      margin-bottom:clamp(4px,1vw,10px);
+      letter-spacing:.05em;
+    }
+    .date-en{
+      font-size:clamp(18px,4vw,32px);
+      font-weight:400;
+      color:#555;
+      text-align:center;
+      margin-bottom:clamp(1rem,3vw,2rem);
+      letter-spacing:.02em;
+    }
+    .subject-label{font-size:clamp(16px,3vw,22px);font-weight:500;color:rgb(139,0,0);text-align:center;margin-bottom:clamp(1rem,3vw,1.5rem);letter-spacing:1px}
+    .timers-row{display:flex;gap:clamp(8px,2vw,16px);justify-content:center;flex-wrap:wrap;margin-bottom:clamp(1rem,3vw,1.5rem)}
+    .timer-block{text-align:center;flex:1;min-width:clamp(100px,28vw,140px)}
+    .timer-type{font-size:clamp(11px,1.8vw,14px);color:#999;margin-bottom:4px}
+    .timer-display{
+      font-size:clamp(44px,12vw,76px);
+      font-weight:500;
+      font-variant-numeric:tabular-nums;
+      letter-spacing:.05em;
+      line-height:1;
+      transition:color .3s;
+    }
     .timer-display.pending{color:#ccc}
     .timer-display.extra-active{color:rgb(180,60,60)}
     .timer-display.main-active{color:rgb(139,0,0)}
     .timer-display.done{color:#ccc}
-    .ctrl-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
-    .ctrl-btn{padding:10px 28px;border-radius:8px;border:1.5px solid rgb(139,0,0);font-size:15px;cursor:pointer;font-weight:500;transition:all .15s}
+    .ctrl-row{display:flex;gap:clamp(8px,2vw,12px);justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+    .ctrl-btn{
+      padding:clamp(9px,2vw,12px) clamp(20px,5vw,32px);
+      border-radius:8px;border:1.5px solid rgb(139,0,0);
+      font-size:clamp(14px,2.5vw,17px);
+      cursor:pointer;font-weight:500;transition:all .15s;
+    }
     .ctrl-btn.primary{background:rgb(139,0,0);color:#fff}
     .ctrl-btn.primary:hover{background:rgb(110,0,0)}
     .ctrl-btn.secondary{background:#fff;color:rgb(139,0,0)}
     .ctrl-btn.secondary:hover{background:rgba(139,0,0,.08)}
-    .pause-log{background:#fff8f8;border:1px solid rgba(139,0,0,.2);border-radius:8px;padding:12px;margin-bottom:1rem;max-height:160px;overflow-y:auto}
-    .pause-log-title{font-size:12px;color:rgb(139,0,0);font-weight:500;margin-bottom:8px}
-    .pause-entry{font-size:13px;color:#555;padding:4px 0;border-bottom:1px solid rgba(139,0,0,.08);display:flex;gap:5px;align-items:baseline;flex-wrap:wrap}
+    .pause-log{background:#fff8f8;border:1px solid rgba(139,0,0,.2);border-radius:8px;padding:clamp(8px,2vw,12px);margin-bottom:1rem;max-height:160px;overflow-y:auto}
+    .pause-log-title{font-size:clamp(11px,1.6vw,13px);color:rgb(139,0,0);font-weight:500;margin-bottom:8px}
+    .pause-entry{font-size:clamp(12px,1.8vw,14px);color:#555;padding:4px 0;border-bottom:1px solid rgba(139,0,0,.08);display:flex;gap:5px;align-items:baseline;flex-wrap:wrap}
     .pause-entry:last-child{border:none}
     .pe-time{color:rgb(139,0,0);font-weight:500}
     .pe-label{color:#999}
     .pe-dur{color:rgb(139,0,0);font-weight:600}
-    .alert-banner{background:rgb(139,0,0);color:#fff;text-align:center;padding:8px;border-radius:6px;font-size:14px;font-weight:500;margin-bottom:1rem;display:none}
-    .end-btn{width:100%;padding:14px;background:#fff;color:rgb(139,0,0);border:2px solid rgb(139,0,0);border-radius:8px;font-size:17px;font-weight:500;cursor:pointer;letter-spacing:1px;display:none}
+    .alert-banner{background:rgb(139,0,0);color:#fff;text-align:center;padding:clamp(6px,1.5vw,10px);border-radius:6px;font-size:clamp(13px,2vw,15px);font-weight:500;margin-bottom:1rem;display:none}
+    .end-btn{width:100%;padding:clamp(12px,3vw,16px);background:#fff;color:rgb(139,0,0);border:2px solid rgb(139,0,0);border-radius:8px;font-size:clamp(15px,3vw,19px);font-weight:500;cursor:pointer;letter-spacing:1px;display:none}
     .end-btn:hover{background:rgb(139,0,0);color:#fff}
-    .back-btn{background:none;border:none;color:rgb(139,0,0);font-size:14px;cursor:pointer;margin-bottom:1rem;display:flex;align-items:center;gap:4px}
-    .status-bar{text-align:center;font-size:13px;color:#999;margin-bottom:.5rem}
-    @media(max-width:480px){
-      .timer-display{font-size:38px}
-      .ctrl-btn{padding:9px 18px;font-size:14px}
-      .title-bar{font-size:16px}
-    }
+    .back-btn{background:none;border:none;color:rgb(139,0,0);font-size:clamp(13px,2vw,15px);cursor:pointer;margin-bottom:1rem;display:flex;align-items:center;gap:4px}
+    .status-bar{text-align:center;font-size:clamp(12px,1.8vw,14px);color:#999;margin-bottom:.5rem}
   </style>
 </head>
 <body>
@@ -205,20 +228,14 @@
     updateExtraRowVisibility();
   }
 
-  function onSubjectChange() {
-    updateExtraNote();
-    updateExtraRowVisibility();
-  }
+  function onSubjectChange() { updateExtraNote(); updateExtraRowVisibility(); }
 
   function updateExtraRowVisibility() {
     const g = document.getElementById('grade').value;
     const row = document.getElementById('extraRow');
     const chk = document.getElementById('chkExtra');
-    if (NO_EXTRA_GRADES.includes(g)) {
-      row.style.display = 'none'; chk.checked = false;
-    } else {
-      row.style.display = '';
-    }
+    if (NO_EXTRA_GRADES.includes(g)) { row.style.display = 'none'; chk.checked = false; }
+    else { row.style.display = ''; }
   }
 
   function updateExtraNote() {
@@ -264,8 +281,7 @@
     const mins = SUBJECTS[s].mins[g];
     if (!mins) { alert('此年級沒有此科目'); return; }
     const chk = document.getElementById('chkExtra').checked;
-    const allowed = isExtraAllowed(g, s);
-    const ex = (chk && allowed) ? SUBJECTS[s].extra : 0;
+    const ex = (chk && isExtraAllowed(g, s)) ? SUBJECTS[s].extra : 0;
     initTimer(s, mins * 60, ex * 60);
   }
 
@@ -282,10 +298,8 @@
     if (timerState.endInterval) clearInterval(timerState.endInterval);
     timerState = {
       mainSecs, extraSecs, mainRemain: mainSecs, extraRemain: extraSecs,
-      hasExtra: extraSecs > 0,
       phase: 'main', running: false, interval: null,
-      pauseStart: null, alerted15: false, alerted5: false,
-      endInterval: null
+      pauseStart: null, alerted15: false, alerted5: false, endInterval: null
     };
     const d = getHKDate();
     document.getElementById('dateZh').textContent = d.zh;
@@ -344,7 +358,6 @@
       if (ts.mainRemain === 900 && !ts.alerted15) { ts.alerted15 = true; showAlert('⚠️ 距離考試結束還有 15 分鐘'); beep(2); }
       if (ts.mainRemain === 300 && !ts.alerted5)  { ts.alerted5  = true; showAlert('⚠️ 距離考試結束還有 5 分鐘');  beep(2); }
     }
-    // 加時期間不設 15/5 分鐘提示
   }
 
   function showAlert(msg) {
@@ -361,21 +374,14 @@
         ts.mainRemain = 0; updateDisplay();
         if (ts.extraSecs > 0) {
           ts.phase = 'extra';
-          beep(2); // 進入加時立即響兩下
+          beep(2);
           showAlert('一般考試時間完結，開始計算加時');
-        } else {
-          finishAll(); return;
-        }
-      } else {
-        updateDisplay(); checkAlerts();
-      }
+        } else { finishAll(); return; }
+      } else { updateDisplay(); checkAlerts(); }
     } else {
       ts.extraRemain--;
-      if (ts.extraRemain <= 0) {
-        ts.extraRemain = 0; updateDisplay(); finishAll(); return;
-      } else {
-        updateDisplay();
-      }
+      if (ts.extraRemain <= 0) { ts.extraRemain = 0; updateDisplay(); finishAll(); return; }
+      else { updateDisplay(); }
     }
   }
 
