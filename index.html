@@ -93,7 +93,6 @@
 <body>
 <div class="wrap">
 
-  <!-- 第一頁：設定 -->
   <div id="page1">
     <div class="title-bar">📋 考試計時器</div>
     <div class="card">
@@ -143,7 +142,6 @@
     </div>
   </div>
 
-  <!-- 第二頁：計時 -->
   <div class="page2" id="page2">
     <button class="back-btn" onclick="goBack()">← 返回設定</button>
     <div class="card">
@@ -170,18 +168,18 @@
 
 <script>
   const SUBJECTS = {
-    "中文":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:60,P2:60,P3:60,P4:60,P5:60,P6:60}, extra:10},
-    "英文":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:55,P2:55,P3:55,P4:55,P5:55,P6:55}, extra:10},
-    "數學":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:45,P2:45,P3:45,P4:55,P5:55,P6:55}, extra:10},
+    "中文":      {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:60,P2:60,P3:60,P4:60,P5:60,P6:60}, extra:10},
+    "英文":      {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:55,P2:55,P3:55,P4:55,P5:55,P6:55}, extra:10},
+    "數學":      {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:45,P2:45,P3:45,P4:55,P5:55,P6:55}, extra:10},
     "中文寫作": {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:50,P2:50,P3:40,P4:55,P5:55,P6:55}, extra:10},
     "英文聆聽": {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:30,P2:30,P3:30,P4:30,P5:30,P6:30}, extra:0},
     "中文聆聽": {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:30,P2:30,P3:30,P4:30,P5:30,P6:30}, extra:0},
-    "宗教":     {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:25,P2:25,P3:25,P4:25,P5:25,P6:25}, extra:0},
+    "宗教":      {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:25,P2:25,P3:25,P4:25,P5:25,P6:25}, extra:0},
     "普通話":   {grades:['P1','P2','P3','P4','P5','P6'], mins:{P1:30,P2:30,P3:30,P4:30,P5:30,P6:30}, extra:0},
-    "常識":     {grades:['P2','P3','P5','P6'],           mins:{P2:45,P3:45,P5:45,P6:45}, extra:10},
-    "人文":     {grades:['P1','P4'],                     mins:{P1:45,P4:45}, extra:10},
-    "科學":     {grades:['P4'],                          mins:{P4:35}, extra:8},
-    "樂理":     {grades:['P5','P6'],                     mins:{P5:30,P6:30}, extra:0}
+    "常識":      {grades:['P2','P3','P5','P6'],           mins:{P2:45,P3:45,P5:45,P6:45}, extra:10},
+    "人文":      {grades:['P1','P4'],                      mins:{P1:45,P4:45}, extra:10},
+    "科學":      {grades:['P4'],                           mins:{P4:35}, extra:8},
+    "樂理":      {grades:['P5','P6'],                      mins:{P5:30,P6:30}, extra:0}
   };
 
   const NO_EXTRA_GRADES = ['P1'];
@@ -299,7 +297,8 @@
     timerState = {
       mainSecs, extraSecs, mainRemain: mainSecs, extraRemain: extraSecs,
       phase: 'main', running: false, interval: null,
-      pauseStart: null, alerted15: false, alerted5: false, endInterval: null
+      pauseStart: null, alerted15: false, alerted5: false, endInterval: null,
+      lastTickTime: null // 用於紀錄上一次更新的絕對時間
     };
     const d = getHKDate();
     document.getElementById('dateZh').textContent = d.zh;
@@ -346,17 +345,21 @@
     if (timerState.phase === 'main') {
       if (dm) dm.className = 'timer-display main-active';
       if (de) de.className = 'timer-display pending';
-    } else {
+    } else if (timerState.phase === 'extra') {
       if (dm) dm.className = 'timer-display done';
       if (de) de.className = 'timer-display extra-active';
+    } else {
+      if (dm) dm.className = 'timer-display done';
+      if (de) de.className = 'timer-display done';
     }
   }
 
   function checkAlerts() {
     const ts = timerState;
     if (ts.phase === 'main') {
-      if (ts.mainRemain === 900 && !ts.alerted15) { ts.alerted15 = true; showAlert('⚠️ 距離考試結束還有 15 分鐘'); beep(2); }
-      if (ts.mainRemain === 300 && !ts.alerted5)  { ts.alerted5  = true; showAlert('⚠️ 距離考試結束還有 5 分鐘');  beep(2); }
+      // 改為範圍判定，防止跨頁面時剛好跳過精確的秒數
+      if (ts.mainRemain <= 900 && !ts.alerted15) { ts.alerted15 = true; showAlert('⚠️ 距離考試結束還有 15 分鐘'); beep(2); }
+      if (ts.mainRemain <= 300 && !ts.alerted5)  { ts.alerted5  = true; showAlert('⚠️ 距離考試結束還有 5 分鐘');  beep(2); }
     }
   }
 
@@ -366,22 +369,53 @@
     setTimeout(() => { if (b.textContent === msg) b.style.display = 'none'; }, 6000);
   }
 
+  // 核心修復：使用真實時間差來扣減時間
   function tick() {
     const ts = timerState;
+    if (!ts.running) return;
+
+    const now = Date.now();
+    // 計算自上一次 tick 以來，實際過去了多少秒（精確到整數秒）
+    const elapsedSecs = Math.round((now - ts.lastTickTime) / 1000);
+    
+    if (elapsedSecs <= 0) return; // 不足一秒則不更新
+    ts.lastTickTime += elapsedSecs * 1000; // 更新基準時間點
+
     if (ts.phase === 'main') {
-      ts.mainRemain--;
-      if (ts.mainRemain <= 0) {
-        ts.mainRemain = 0; updateDisplay();
+      if (ts.mainRemain > elapsedSecs) {
+        ts.mainRemain -= elapsedSecs;
+        updateDisplay();
+        checkAlerts();
+      } else {
+        // 一般時間用完，計算剩餘的溢出時間扣到加時內
+        const remainingOverflow = elapsedSecs - ts.mainRemain;
+        ts.mainRemain = 0;
         if (ts.extraSecs > 0) {
           ts.phase = 'extra';
           beep(2);
           showAlert('一般考試時間完結，開始計算加時');
-        } else { finishAll(); return; }
-      } else { updateDisplay(); checkAlerts(); }
-    } else {
-      ts.extraRemain--;
-      if (ts.extraRemain <= 0) { ts.extraRemain = 0; updateDisplay(); finishAll(); return; }
-      else { updateDisplay(); }
+          if (ts.extraRemain > remainingOverflow) {
+            ts.extraRemain -= remainingOverflow;
+            updateDisplay();
+          } else {
+            ts.extraRemain = 0;
+            updateDisplay();
+            finishAll();
+          }
+        } else {
+          updateDisplay();
+          finishAll();
+        }
+      }
+    } else if (ts.phase === 'extra') {
+      if (ts.extraRemain > elapsedSecs) {
+        ts.extraRemain -= elapsedSecs;
+        updateDisplay();
+      } else {
+        ts.extraRemain = 0;
+        updateDisplay();
+        finishAll();
+      }
     }
   }
 
@@ -409,7 +443,9 @@
     const btn = document.getElementById('btnStart');
     if (!ts.running) {
       ts.running = true;
-      ts.interval = setInterval(tick, 1000);
+      ts.lastTickTime = Date.now(); // 記錄開始/恢復的精確絕對時間
+      ts.interval = setInterval(tick, 200); // 提高檢查頻率到每200毫秒一次，確保切換回前台時能以最快速度同步
+      
       if (ts.pauseStart !== null) {
         const resumeTime = getHKTimeStr();
         const durSecs = Math.round((Date.now() - ts.pauseStart) / 1000);
